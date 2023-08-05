@@ -21,6 +21,9 @@ int pausa = 0;
 int buttonGood = 8; //p                           in do botao no arduino
 int buttonBad = 9; //pin do botao no arduino
 
+//variável para acender ou apagar uma posição aleatória da árvore
+int randomNumber;
+
 //variaveis para controlar o rebounce do button
 int counter = 0, counterBad = 0;
 int lastStateGood = LOW; //leitura anterior
@@ -38,11 +41,10 @@ void setup() {
   pinMode(buttonGood, INPUT);
   pinMode(buttonBad, INPUT);
   pixels.begin();
-  uint32_t magenta = pixels.Color(0, 198, 0);
-  pixels.fill(magenta, 0, 56);
-  //pixels.setPixelColor(100, 0, 0, 99);
+  uint32_t green = pixels.Color(10, 99, 10);
+  pixels.fill(green, 0, 56);
   pixels.show();
-
+  
   //Comunicação serial com o módulo
   mySoftwareSerial.begin(9600);
 
@@ -71,7 +73,6 @@ void setup() {
   Serial.println();
   Serial.println(F("Módulo DFPlayer Mini inicializado corretamente!"));
 
-  //myDFPlayer.play(1); //Inicia módulo já tocando música 1
 }
 
 void loop() {
@@ -94,8 +95,8 @@ void botao(){
       stateGood = readGood;
       counter++;
       if(counter > 1){
-        //Tocar som aqui
         acender_bom(vetor_leds);//chama funcao para acender um LED que não esteja aceso (em ordem crescente)
+        //Tocar som aqui
         myDFPlayer.play(1);
         counter = 0;
       }
@@ -111,10 +112,10 @@ void botao(){
       stateBad = readBad;
       counterBad++;
       if(counterBad > 1){
-        //Tocar som aqui
-        myDFPlayer.play(2);
         apagar_mal(vetor_leds);//chama funcao para apagar um LED que esteja aceso (em ordem decrescente)
-        //acender_bom2(vetor_leds);//chama funcao para acender um LED que não esteja aceso (em ordem crescente)
+
+        //Tocar som aqui (outra faixa)
+        myDFPlayer.play(2);
 
         //myDFPlayer.play(2);
         counterBad = 0;
@@ -135,46 +136,60 @@ void apagar_leds(int vet[]){
 
 void acender_bom(int vet[]){
   //acender um led
-  for(int i = 0; i < NUMLED; i++){//faz o loop no vetor procurando posicoes (leds) com o valor 0 (estado de led apagado) para acender
-    if(vet[i] == 0){
-      vet[i] = 1;
-      uint32_t green = pixels.Color(0, 0, 128);
-      //pixels.fill(green, i, 1); //forma de acender varios leds de uma vez
-      pixels.setPixelColor(i, green);//seta a cor do led em verde
-      //pixels.fill(green, 0, 25);
-      pixels.show();//atualiza a fita com um novo led configurado com a cor green
-      break;
-    }  
+  randomNumber = random(0, NUMLED);
+  Serial.println(randomNumber);
+  int i = 0;
+  while(vet[randomNumber] == 1 && i < NUMLED){
+    randomNumber = random(0, NUMLED);
+    i++;//essa lógica aqui da i não funciona 
   }
-}
+  if(i == NUMLED){
+    //todos os leds estão ligados, não precisa fazer nada
+  }else{
+    vet[randomNumber] = 1;
+    uint32_t green = pixels.Color(0, 198, 0);
+    pixels.setPixelColor(randomNumber, green);//seta a cor do led em verde
+    pixels.show();//atualiza a fita com um novo led configurado com a cor green
+  }
 
-void acender_bom2(int vet[]){
-  //acender um led
-  for(int i = 0; i < NUMLED; i++){//faz o loop no vetor procurando posicoes (leds) com o valor 0 (estado de led apagado) para acender
+  /*for(int i = 0; i < NUMLED; i++){//faz o loop no vetor procurando posicoes (leds) com o valor 0 (estado de led apagado) para acender
     if(vet[i] == 0){
       vet[i] = 1;
-      uint32_t green = pixels.Color(128, 128, 0);
-      //pixels.fill(green, i, 1); //forma de acender varios leds de uma vez
-      //pixels.setPixelColor(i, green);//seta a cor do led em verde
-      pixels.fill(green, 0, 25);
+      uint32_t green = pixels.Color(0, 200, 0);
+      pixels.setPixelColor(i, green);//seta a cor do led em verde
       pixels.show();//atualiza a fita com um novo led configurado com a cor green
       break;
     }  
-  }
+  }*/
 }
 
 void apagar_mal(int vet[]){
+
+  randomNumber = random(0, NUMLED);
+  int i = 0;
+  while(vet[randomNumber] != 0 && i < NUMLED){
+    randomNumber = random(0, NUMLED);
+    i++;
+  }
+  if(i == NUMLED){
+    //todos os leds estão desligados, não precisa fazer nada
+  }else{
+    vet[randomNumber] = 0;
+    uint32_t black = pixels.Color(0, 0, 0);
+    pixels.setPixelColor(randomNumber, black);//seta a cor do led
+    pixels.show();//atualiza a fita com um novo led configurado com a cor black
+  }
+  
   //apagar de tras para frente
-  for(int i = NUMLED-1; i >= 0; i--){//faz o loop no vetor procurando posicoes (leds) com o valor 1 (estado de led aceso) para apagar
+  /*for(int i = NUMLED-1; i >= 0; i--){//faz o loop no vetor procurando posicoes (leds) com o valor 1 (estado de led aceso) para apagar
     if(vet[i] == 1){
       vet[i] = 0;
       uint32_t black = pixels.Color(0, 0, 0);
-      //pixels.fill(black, i, 1);//forma de acender varios leds de uma vez
       pixels.setPixelColor(i, black);//seta a cor do led
       pixels.show();//atualiza a fita com um novo led configurado com a cor black
       break;
     }  
-  }
+  }*/
 }
 
 
